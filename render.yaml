@@ -1,0 +1,18 @@
+# Render free deployment config
+# Deploy: push to GitHub -> connect repo on Render -> create a "Web Service"
+# using this file. It maps to the Flask app started by `python app.py server`.
+services:
+  - type: web
+    name: zenofest-registration
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py server
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.7
+      # Set these in the Render dashboard (do NOT commit secrets):
+      #   GOOGLE_SERVICE_ACCOUNT, RAW_SHEET_ID, RAW_TAB_NAME,
+      #   ORGANIZED_SHEET_ID, WEBHOOK_TOKEN, ORGANIZED_SHARE_EMAILS
+      - key: GOOGLE_SERVICE_ACCOUNT
+        value: service_account.json
