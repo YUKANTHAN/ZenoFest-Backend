@@ -98,26 +98,30 @@ def from_matrix(headers, rows):
             h = str(header)
             low = h.lower()
             value = row[c] if c < len(row) else None
+            fmt = _fmt(value)
 
             if h in ALWAYS_HEADER:
                 mapped = ALWAYS_HEADER[h]
                 if mapped == "Food Preference":
-                    meta.setdefault("Food Preference", _fmt(value))
+                    if fmt:
+                        meta.setdefault("Food Preference", fmt)
                 else:
-                    meta.setdefault(mapped, _fmt(value))
+                    # Keep first non-empty across duplicate headers
+                    if fmt and not meta.get(mapped):
+                        meta[mapped] = fmt
                 continue
 
             if "food preference" in low:
-                if _fmt(value):
-                    food_candidates.append(_fmt(value))
+                if fmt:
+                    food_candidates.append(fmt)
                 continue
 
             if "member" in low:
                 m = re.search(r"member\s*([2-4])", h, re.IGNORECASE)
                 if m:
                     slot = int(m.group(1))
-                    if slot in members_by_slot and _fmt(value):
-                        members_by_slot[slot].append(_fmt(value))
+                    if slot in members_by_slot and fmt:
+                        members_by_slot[slot].append(fmt)
 
         clean = _clean_record(meta, members_by_slot, food_candidates)
         if clean is not None:
@@ -146,10 +150,13 @@ def from_headers(values_with_headers):
             # Always-on exact fields
             if h in ALWAYS_HEADER:
                 mapped = ALWAYS_HEADER[h]
+                fmt = _fmt(value)
                 if mapped == "Food Preference":
-                    meta.setdefault("Food Preference", _fmt(value))
+                    if fmt:
+                        meta.setdefault("Food Preference", fmt)
                 else:
-                    meta.setdefault(mapped, _fmt(value))
+                    if fmt and not meta.get(mapped):
+                        meta[mapped] = fmt
                 continue
 
             # Duplicate "Food Preference ..." variants -> keep first non-empty
