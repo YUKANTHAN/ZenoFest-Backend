@@ -1,6 +1,13 @@
 # Render free deployment config
 # Deploy: push to GitHub -> connect repo on Render -> create a "Web Service"
 # using this file. It maps to the Flask app started by `python app.py server`.
+#
+# NOTE: secrets are NOT committed. Set them in the Render dashboard:
+#   RAW_SHEET_ID, RAW_TAB_NAME, ORGANIZED_SHEET_ID, WEBHOOK_TOKEN,
+#   ORGANIZED_SHARE_EMAILS
+#   and for credentials either set a SECRET FILE "service_account.json"
+#   (Render supports "secret files") or paste the whole JSON into
+#   GOOGLE_SERVICE_ACCOUNT_JSON.
 services:
   - type: web
     name: zenofest-registration
@@ -11,8 +18,5 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.13.7
-      # Set these in the Render dashboard (do NOT commit secrets):
-      #   GOOGLE_SERVICE_ACCOUNT, RAW_SHEET_ID, RAW_TAB_NAME,
-      #   ORGANIZED_SHEET_ID, WEBHOOK_TOKEN, ORGANIZED_SHARE_EMAILS
-      - key: GOOGLE_SERVICE_ACCOUNT
+      - key: GOOGLE_SERVICE_ACCOUNT_PATH
         value: service_account.json

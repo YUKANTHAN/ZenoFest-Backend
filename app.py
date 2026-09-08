@@ -54,6 +54,11 @@ SCOPE = [
     "https://www.googleapis.com/auth/drive",
 ]
 SA_JSON = os.environ.get("GOOGLE_SERVICE_ACCOUNT", "service_account.json")
+# Allow passing the service-account key inline as an env var (for deploy
+# platforms that can't serve file uploads like Render). If set, it takes
+# precedence and gets written to SA_JSON_PATH below.
+SA_JSON_CONTENT = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
+SA_JSON_PATH = os.environ.get("GOOGLE_SERVICE_ACCOUNT_PATH", SA_JSON)
 RAW_SHEET_ID = os.environ.get("RAW_SHEET_ID", "")
 RAW_TAB_NAME = os.environ.get("RAW_TAB_NAME", "Form Responses 1")
 ORGANIZED_SHEET_ID = os.environ.get("ORGANIZED_SHEET_ID", "").strip()
@@ -66,8 +71,14 @@ WEBHOOK_TOKEN = os.environ.get("WEBHOOK_TOKEN", "")
 
 
 def get_client():
+    path = SA_JSON
+    if SA_JSON_CONTENT:
+        # Support inline service-account JSON (Render env vars can't be files).
+        path = SA_JSON_PATH
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(SA_JSON_CONTENT)
     creds = service_account.Credentials.from_service_account_file(
-        SA_JSON, scopes=SCOPE
+        path, scopes=SCOPE
     )
     return gspread.authorize(creds)
 
