@@ -13,8 +13,9 @@
  */
 
 var BACKEND_URL = ScriptApp.getScriptProperties().getProperty('BACKEND_URL') ||
-  'https://YOUR-APP.onrender.com/webhook';
-var WEBHOOK_TOKEN = ScriptApp.getScriptProperties().getProperty('WEBHOOK_TOKEN') || '';
+  'https://zenofest-backend.onrender.com/webhook';
+var WEBHOOK_TOKEN = ScriptApp.getScriptProperties().getProperty('WEBHOOK_TOKEN') ||
+  'K7x9mZ2pQ5vR8nL4';
 
 /** Create/install the onFormSubmit trigger. Run this once. */
 function configureTrigger() {
