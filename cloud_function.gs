@@ -112,12 +112,23 @@ function sendConfirmationEmail(row) {
 
   var subject = 'You are registered for ZenoFest 2026 - ' + teamName + ' (' + teamId + ')';
 
+  // Gather team members (leader first, then the rest).
+  var members = [];
+  members.push({ role: 'TEAM LEADER', name: leaderName, contact: row.leader_contact || '' });
+  if (row.members && row.members.length) {
+    for (var mi = 0; mi < row.members.length; mi++) {
+      var m = row.members[mi];
+      if (m && m.name) {
+        members.push({ role: 'MEMBER ' + (mi + 2), name: m.name, contact: m.contact || '' });
+      }
+    }
+  }
+
   // Build summary rows for the HTML table.
   var fields = [
     ['TEAM ID', teamId],
     ['TEAM NAME', teamName],
     ['COLLEGE', college],
-    ['TEAM LEADER', leaderName],
     ['TEAM SIZE', teamSize + ' members'],
     ['TECH EVENT', techEvent],
     ['NON-TECH EVENT', nonTechEvent],
@@ -131,6 +142,19 @@ function sendConfirmationEmail(row) {
       + '<td style="padding:13px 16px;color:#7c3aed;font-size:12px;font-weight:700;letter-spacing:1px;width:38%;border-bottom:1px solid #eef0f6;text-transform:uppercase;">' + fields[i][0] + '</td>'
       + '<td style="padding:13px 16px;color:#1e293b;font-size:15px;font-weight:600;border-bottom:1px solid #eef0f6;">' + fields[i][1] + '</td>'
       + '</tr>';
+  }
+
+  // Team members section.
+  var membersHtml = '';
+  if (members.length) {
+    for (var k = 0; k < members.length; k++) {
+      var mbg = (k % 2 === 0) ? '#ffffff' : '#f6f5ff';
+      membersHtml += ''
+        + '<tr style="background:' + mbg + ';">'
+        + '<td style="padding:11px 16px;color:#7c3aed;font-size:12px;font-weight:700;letter-spacing:1px;width:38%;border-bottom:1px solid #eef0f6;text-transform:uppercase;">' + members[k].role + '</td>'
+        + '<td style="padding:11px 16px;color:#1e293b;font-size:14px;font-weight:600;border-bottom:1px solid #eef0f6;">' + members[k].name + (members[k].contact ? ' &nbsp;&middot;&nbsp; ' + members[k].contact : '') + '</td>'
+        + '</tr>';
+    }
   }
 
   var htmlBody = ''
@@ -147,6 +171,7 @@ function sendConfirmationEmail(row) {
     + '<p style="margin:0 0 6px 0;color:#111827;font-size:19px;font-weight:700;">Hi ' + leaderName + ',</p>'
     + '<p style="margin:0;color:#6b7280;font-size:14px;line-height:1.7;">Your team registration for <b style="color:#4f46e5;">ZenoFest 2026</b> is officially confirmed. Here is your registration summary:</p>'
     + '<table style="width:100%;border-collapse:collapse;margin:20px 0 6px;">' + rowsHtml + '</table>'
+    + (membersHtml ? '<p style="margin:18px 0 6px;color:#4c1d95;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Team Members</p><table style="width:100%;border-collapse:collapse;">' + membersHtml + '</table>' : '')
     + '<div style="margin-top:18px;background:#f6f5ff;border-left:4px solid #7c3aed;border-radius:8px;padding:12px 16px;color:#4c1d95;font-size:13px;line-height:1.6;">'
     + 'Your Team ID is <b>' + teamId + '</b>. Registration PDF is attached to this mail. Please keep it safe and show it at the fest if required.'
     + '</div>'
@@ -167,7 +192,8 @@ function sendConfirmationEmail(row) {
       teamSize: teamSize,
       techEvent: techEvent,
       nonTechEvent: nonTechEvent,
-      foodPref: foodPref
+      foodPref: foodPref,
+      members: members
     });
     GmailApp.sendEmail(toEmail, subject, '', {
       htmlBody: htmlBody,
@@ -236,7 +262,6 @@ function buildRegistrationPdf(details) {
     ['Team ID', details.teamId],
     ['Team Name', details.teamName],
     ['College', details.college],
-    ['Team Leader', details.leaderName],
     ['Team Size', details.teamSize + ' members'],
     ['Technical Event', details.techEvent],
     ['Non-Technical Event', details.nonTechEvent],
@@ -252,6 +277,37 @@ function buildRegistrationPdf(details) {
     c1.getChild(0).asParagraph().setForegroundColor('#7C3AED').setBold(true);
     c1.getChild(0).asParagraph().setFontSize(10);
     c2.getChild(0).asParagraph().setFontSize(10.5);
+  }
+
+  if (details.members && details.members.length) {
+    body.appendParagraph('');
+    body.appendParagraph('TEAM MEMBERS')
+      .setAttributes({ FONT_SIZE: 11, BOLD: true, FOREGROUND_COLOR: '#4F46E5', FONT_FAMILY: 'Arial' });
+
+    var mtable = body.appendTable();
+    var mhr = mtable.appendTableRow();
+    mhr.appendTableCell('ROLE').setBackgroundColor('#4F46E5');
+    mhr.appendTableCell('NAME').setBackgroundColor('#4F46E5');
+    mhr.appendTableCell('CONTACT').setBackgroundColor('#4F46E5');
+    var hcells = mhr.getChildren();
+    for (var h = 0; h < hcells.length; h++) {
+      hcells[h].getChild(0).asParagraph().setForegroundColor('#FFFFFF').setBold(true);
+      hcells[h].getChild(0).asParagraph().setFontSize(10);
+    }
+
+    for (var mi = 0; mi < details.members.length; mi++) {
+      var cm = details.members[mi];
+      var mrow = mtable.appendTableRow();
+      mrow.appendTableCell(cm.role || '');
+      mrow.appendTableCell(cm.name || '');
+      mrow.appendTableCell(cm.contact || '');
+      var mcells = mrow.getChildren();
+      var mbg = (mi % 2 === 0) ? '#F6F5FF' : '#FFFFFF';
+      for (var mc = 0; mc < mcells.length; mc++) {
+        mcells[mc].setBackgroundColor(mbg);
+        mcells[mc].getChild(0).asParagraph().setFontSize(10);
+      }
+    }
   }
 
   body.appendParagraph('');

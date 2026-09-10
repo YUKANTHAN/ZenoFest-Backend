@@ -137,10 +137,15 @@ def _new_rows_info(rows, start_row):
             "team_name": field(row, "Team Name"),
             "college": field(row, "College"),
             "leader_name": field(row, "Leader Name"),
+            "leader_contact": field(row, "Leader Contact"),
             "team_size": field(row, "Team Size"),
             "tech_event": tech_event,
             "non_tech_event": field(row, "NonTech Event"),
             "food_preference": field(row, "Food Preference"),
+            "members": [
+                {"name": field(row, "Member 2 Name"), "contact": field(row, "Member 2 Contact")},
+                {"name": field(row, "Member 3 Name"), "contact": field(row, "Member 3 Contact")},
+            ],
         })
     return info
 
