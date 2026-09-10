@@ -289,24 +289,25 @@ function buildRegistrationPdf(details) {
     mhr.appendTableCell('ROLE').setBackgroundColor('#4F46E5');
     mhr.appendTableCell('NAME').setBackgroundColor('#4F46E5');
     mhr.appendTableCell('CONTACT').setBackgroundColor('#4F46E5');
-    var hcells = mhr.getChildren();
-    for (var h = 0; h < hcells.length; h++) {
-      hcells[h].getChild(0).asParagraph().setForegroundColor('#FFFFFF').setBold(true);
-      hcells[h].getChild(0).asParagraph().setFontSize(10);
+    var hdrCells = mhr.getCells();
+    for (var h = 0; h < hdrCells.length; h++) {
+      hdrCells[h].getChild(0).asParagraph().setForegroundColor('#FFFFFF').setBold(true);
+      hdrCells[h].getChild(0).asParagraph().setFontSize(10);
     }
 
     for (var mi = 0; mi < details.members.length; mi++) {
       var cm = details.members[mi];
       var mrow = mtable.appendTableRow();
-      mrow.appendTableCell(cm.role || '');
-      mrow.appendTableCell(cm.name || '');
-      mrow.appendTableCell(cm.contact || '');
-      var mcells = mrow.getChildren();
+      var mC1 = mrow.appendTableCell(cm.role || '');
+      var mC2 = mrow.appendTableCell(cm.name || '');
+      var mC3 = mrow.appendTableCell(cm.contact || '');
       var mbg = (mi % 2 === 0) ? '#F6F5FF' : '#FFFFFF';
-      for (var mc = 0; mc < mcells.length; mc++) {
-        mcells[mc].setBackgroundColor(mbg);
-        mcells[mc].getChild(0).asParagraph().setFontSize(10);
-      }
+      mC1.setBackgroundColor(mbg);
+      mC2.setBackgroundColor(mbg);
+      mC3.setBackgroundColor(mbg);
+      mC1.getChild(0).asParagraph().setFontSize(10);
+      mC2.getChild(0).asParagraph().setFontSize(10);
+      mC3.getChild(0).asParagraph().setFontSize(10);
     }
   }
 
