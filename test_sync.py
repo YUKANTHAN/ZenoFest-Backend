@@ -45,13 +45,16 @@ def test():
     organized_ws = FakeWorksheet([list(rl.OUTPUT_HEADERS)])
 
     # Monkeypatch app.sync helpers to use fakes
-    n = app.sync(FakeClient(), raw_ws, organized_ws)
+    n, rows = app.sync(FakeClient(), raw_ws, organized_ws)
     assert n == 1, f"expected 1 append, got {n}"
-    print("PASS: first sync appended 1 team row")
+    assert len(rows) == 1, f"expected 1 row info, got {len(rows)}"
+    assert rows[0]["team_id"], f"expected a team_id, got {rows[0]['team_id']}"
+    print(f"PASS: first sync appended 1 team row (team_id={rows[0]['team_id']})")
 
     # Second sync should dedup -> append 0
-    n2 = app.sync(FakeClient(), raw_ws, organized_ws)
+    n2, rows2 = app.sync(FakeClient(), raw_ws, organized_ws)
     assert n2 == 0, f"expected 0 on second sync, got {n2}"
+    assert len(rows2) == 0, f"expected no rows on second sync, got {len(rows2)}"
     print("PASS: second sync appended nothing (dedup works)")
 
     print("\nFinal organized rows:")

@@ -50,6 +50,23 @@ OUTPUT_HEADERS = OUTPUT_ORDER_BEFORE_MEMBERS + [
 ]
 
 
+def make_team_id(tech_event, row_num):
+    """Build a ZenoFest team id like ZFPE5 / ZFUI7 / ZFLH12 from the tech
+    event the team chose and the sheet row it landed on in the organized
+    sheet. Falls back to event initials when nothing known matches."""
+    e = (tech_event or "").strip().lower()
+    if "project" in e or "expo" in e:
+        code = "PE"
+    elif "logic" in e or "hunt" in e:
+        code = "LH"
+    elif "ui" in e or "ux" in e:
+        code = "UI"
+    else:
+        initials = "".join(w[0] for w in str(tech_event).split() if w)[:2].upper()
+        code = initials or "XX"
+    return f"ZF{code}{int(row_num)}"
+
+
 def _fmt(v):
     if v is None:
         return ""

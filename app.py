@@ -114,8 +114,40 @@ def _row_key(row):
     return (str(ts), str(team))
 
 
+def _new_rows_info(rows, start_row):
+    """Build the per-row metadata the Apps Script needs to send emails,
+    including the generated ZenoFest team id."""
+    import reorganize_logic as rl
+
+    def field(row, name):
+        try:
+            return row[rl.OUTPUT_HEADERS.index(name)]
+        except (ValueError, IndexError):
+            return ""
+
+    info = []
+    for i, row in enumerate(rows):
+        sheet_row = start_row + i
+        tech_event = field(row, "Tech Event")
+        team_id = rl.make_team_id(tech_event, sheet_row)
+        info.append({
+            "row": sheet_row,
+            "team_id": team_id,
+            "email": field(row, "Email"),
+            "team_name": field(row, "Team Name"),
+            "college": field(row, "College"),
+            "leader_name": field(row, "Leader Name"),
+            "team_size": field(row, "Team Size"),
+            "tech_event": tech_event,
+            "non_tech_event": field(row, "NonTech Event"),
+            "food_preference": field(row, "Food Preference"),
+        })
+    return info
+
+
 def sync(client=None, raw_ws=None, organized_ws=None):
-    """One sync pass: read raw, reorganize, append only NEW rows."""
+    """One sync pass: read raw, reorganize, append only NEW rows.
+    Returns (appended_count, [row_info, ...])."""
     client = client or get_client()
     raw_ws = raw_ws or open_raw_sheet(client)
     organized_ws = organized_ws or get_or_create_organized(client)
@@ -123,14 +155,14 @@ def sync(client=None, raw_ws=None, organized_ws=None):
     raw_matrix = raw_ws.get_all_values()
     if not raw_matrix:
         print("Raw sheet is empty.")
-        return 0
+        return 0, []
 
     headers = raw_matrix[0]
     data_rows = raw_matrix[1:]
     clean_rows = rl.from_matrix(headers, data_rows)
     if not clean_rows:
         print("No new raw responses to process.")
-        return 0
+        return 0, []
 
     # Existing identity set in the organized sheet.
     existing_keys = set()
@@ -147,15 +179,19 @@ def sync(client=None, raw_ws=None, organized_ws=None):
 
     if not to_append:
         print("No new responses to append.")
-        return 0
+        return 0, []
 
     # Header may be missing if sheet was created empty; ensure it.
     first = organized_ws.get_all_values()
     if not first or all(not c for c in first[0]):
         organized_ws.update(range_name="A1", values=[rl.OUTPUT_HEADERS])
+        start_row = 2
+    else:
+        start_row = len(first) + 1
     organized_ws.append_rows(to_append, value_input_option="USER_ENTERED")
     print(f"Appended {len(to_append)} team row(s).")
-    return len(to_append)
+
+    return len(to_append), _new_rows_info(to_append, start_row)
 
 
 # ---------------------------------------------------------------------------
@@ -181,22 +217,37 @@ def create_app(client=None):
             # Trigger a full sync. The Apps Script just needs to call this
             # endpoint on each new submission; the backend re-reads the raw
             # sheet and appends only rows that aren't in the organized sheet.
-            n = sync(app.config["CLIENT"])
-            return jsonify({"ok": True, "appended": n, "status": "synced"}), 200
+            n, rows = sync(app.config["CLIENT"])
+            return jsonify({
+                "ok": True,
+                "appended": n,
+                "rows": rows,
+                "status": "synced",
+            }), 200
         except Exception as exc:  # pragma: no cover
             return jsonify({"error": str(exc)}), 500
 
     @app.get("/sync")
     def sync_endpoint():
         try:
-            n = sync(app.config["CLIENT"])
-            return jsonify({"ok": True, "appended": n}), 200
+            n, rows = sync(app.config["CLIENT"])
+            return jsonify({"ok": True, "appended": n, "rows": rows}), 200
         except Exception as exc:  # pragma: no cover
             return jsonify({"error": str(exc)}), 500
 
     @app.get("/health")
     def health():
         return jsonify({"ok": True}), 200
+
+    @app.get("/team-id-sample")
+    def team_id_sample():
+        """Small dev helper: preview the team id format for each event."""
+        import reorganize_logic as rl
+
+        events = ["Project Expo", "UI/UX Design", "Logic Hunt"]
+        return jsonify({"samples": [
+            {"event": e, "team_id": rl.make_team_id(e, 12)} for e in events
+        ]}), 200
 
     return app
 
