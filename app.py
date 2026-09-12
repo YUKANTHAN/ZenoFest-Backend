@@ -142,6 +142,7 @@ def _new_rows_info(rows, start_row):
             "tech_event": tech_event,
             "non_tech_event": field(row, "NonTech Event"),
             "food_preference": field(row, "Food Preference"),
+            "leader_food": field(row, "Member 1 Food"),
             "members": [
                 {"name": field(row, "Member 2 Name"), "contact": field(row, "Member 2 Contact"), "food": field(row, "Member 2 Food")},
                 {"name": field(row, "Member 3 Name"), "contact": field(row, "Member 3 Contact"), "food": field(row, "Member 3 Food")},

@@ -114,12 +114,12 @@ function sendConfirmationEmail(row) {
 
   // Gather team members (leader first, then the rest).
   var members = [];
-  members.push({ role: 'TEAM LEADER', name: leaderName, contact: row.leader_contact || '' });
+  members.push({ role: 'TEAM LEADER', name: leaderName, contact: row.leader_contact || '', food: row.leader_food || row.food_preference || foodPref });
   if (row.members && row.members.length) {
     for (var mi = 0; mi < row.members.length; mi++) {
       var m = row.members[mi];
       if (m && m.name) {
-        members.push({ role: 'MEMBER ' + (mi + 2), name: m.name, contact: m.contact || '' });
+        members.push({ role: 'MEMBER ' + (mi + 2), name: m.name, contact: m.contact || '', food: m.food || foodPref });
       }
     }
   }
