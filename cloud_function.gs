@@ -151,7 +151,7 @@ function sendConfirmationEmail(row) {
       var contactHtml = members[k].contact ? members[k].contact : '';
       var memberFood = members[k].food || foodPref;
       var memberFoodColor = (memberFood.toLowerCase().indexOf('non') !== -1) ? '#ef4444' : '#22c55e';
-      var foodIcon = '&nbsp;&nbsp;<span style="display:inline-block;width:14px;height:14px;border:2px solid ' + memberFoodColor + ';border-radius:3px;vertical-align:middle;text-align:center;line-height:10px;font-size:0;"><span style="display:inline-block;width:6px;height:6px;background:' + memberFoodColor + ';border-radius:50%;vertical-align:middle;"></span></span>';
+      var foodIcon = '<div style="float:right;margin-top:2px;"><span style="display:inline-block;width:14px;height:14px;border:2px solid ' + memberFoodColor + ';border-radius:3px;vertical-align:middle;text-align:center;line-height:10px;font-size:0;"><span style="display:inline-block;width:6px;height:6px;background:' + memberFoodColor + ';border-radius:50%;vertical-align:middle;"></span></span></div>';
       membersHtml += ''
         + '<tr style="background:' + mbg + ';">'
         + '<td style="padding:11px 16px;color:#7c3aed;font-size:12px;font-weight:700;letter-spacing:1px;width:38%;border-bottom:1px solid #eef0f6;text-transform:uppercase;">' + members[k].role + '</td>'
@@ -291,9 +291,8 @@ function buildRegistrationPdf(details) {
     mhr.appendTableCell('ROLE').setBackgroundColor('#4F46E5');
     mhr.appendTableCell('NAME').setBackgroundColor('#4F46E5');
     mhr.appendTableCell('CONTACT').setBackgroundColor('#4F46E5');
-    mhr.appendTableCell('FOOD').setBackgroundColor('#4F46E5');
     for (var h = 0; h < mhr.getNumChildren(); h++) {
-      mhr.getChild(h).getChild(0).asParagraph().setBold(true);
+      mhr.getChild(h).getChild(0).asParagraph().setForegroundColor('#FFFFFF').setBold(true);
       mhr.getChild(h).getChild(0).asParagraph().setFontSize(10);
     }
 
@@ -303,19 +302,17 @@ function buildRegistrationPdf(details) {
       var mrow = mtable.appendTableRow();
       var mC1 = mrow.appendTableCell(cm.role || '');
       var mC2 = mrow.appendTableCell(cm.name || '');
-      var mC3 = mrow.appendTableCell(cm.contact || '');
       var memberFood = cm.food || details.foodPref;
       var memberFoodColor = (memberFood.toLowerCase().indexOf('non') !== -1) ? '#EF4444' : '#22C55E';
-      var mC4 = mrow.appendTableCell(foodSymbol);
+      var contactWithFood = (cm.contact || '') + '  ' + foodSymbol;
+      var mC3 = mrow.appendTableCell(contactWithFood);
       var mbg = (mi % 2 === 0) ? '#F6F5FF' : '#FFFFFF';
       mC1.setBackgroundColor(mbg);
       mC2.setBackgroundColor(mbg);
       mC3.setBackgroundColor(mbg);
-      mC4.setBackgroundColor(mbg);
       mC1.getChild(0).asParagraph().setFontSize(10);
       mC2.getChild(0).asParagraph().setFontSize(10);
-      mC3.getChild(0).asParagraph().setFontSize(10);
-      mC4.getChild(0).asParagraph().setFontSize(10).setForegroundColor(memberFoodColor);
+      mC3.getChild(0).asParagraph().setFontSize(10).setForegroundColor(memberFoodColor);
     }
   }
 
