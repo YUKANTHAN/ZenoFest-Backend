@@ -319,7 +319,7 @@ function buildRegistrationPdf(details) {
       mC1.getChild(0).asParagraph().setFontSize(10);
       mC2.getChild(0).asParagraph().setFontSize(10);
       mC3.getChild(0).asParagraph().setFontSize(10);
-      var nestedTable = mC4.appendTable().setBorder(1).setBorderColor(memberFoodColor);
+      var nestedTable = mC4.appendTable().setBorder(2).setBorderColor(memberFoodColor);
       var nRow = nestedTable.appendTableRow();
       var nCell = nRow.appendTableCell(foodSymbol);
       nCell.getChild(0).asParagraph().setForegroundColor(memberFoodColor).setFontSize(8).setAlignment(DocumentApp.HorizontalAlignment.CENTER);
