@@ -313,13 +313,16 @@ function buildRegistrationPdf(details) {
       mC3.setBackgroundColor(mbg);
       mC1.getChild(0).asParagraph().setFontSize(10);
       mC2.getChild(0).asParagraph().setFontSize(10);
-      var innerTbl = DocumentApp.createTable(1, 2).setBorderColor(mbg);
-      var innerR = innerTbl.getRow(0);
-      innerR.getCell(0).getChild(0).asParagraph().appendText(cm.contact || '').setFontSize(10);
-      innerR.getCell(1).getChild(0).asParagraph().appendText(foodSymbol).setFontSize(10).setForegroundColor(memberFoodColor).setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
-      innerR.getCell(0).setBackgroundColor(mbg);
-      innerR.getCell(1).setBackgroundColor(mbg);
-      mC3.appendTable(innerTbl);
+      var innerTbl = mC3.appendTable();
+      innerTbl.setBorderWidth(0);
+      innerTbl.setBorderColor(mbg);
+      var innerR = innerTbl.appendTableRow();
+      var c1 = innerR.appendTableCell(cm.contact || '');
+      var c2 = innerR.appendTableCell(foodSymbol);
+      c1.setBackgroundColor(mbg);
+      c2.setBackgroundColor(mbg);
+      c1.getChild(0).asParagraph().setFontSize(10);
+      c2.getChild(0).asParagraph().setFontSize(10).setForegroundColor(memberFoodColor);
     }
   }
 
