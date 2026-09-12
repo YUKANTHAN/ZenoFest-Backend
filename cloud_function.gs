@@ -313,16 +313,13 @@ function buildRegistrationPdf(details) {
       mC3.setBackgroundColor(mbg);
       mC1.getChild(0).asParagraph().setFontSize(10);
       mC2.getChild(0).asParagraph().setFontSize(10);
-      var innerRow = mC3.appendTable().setBorderColor(mbg).appendTableRow();
-      var iContact = innerRow.appendTableCell(cm.contact || '');
-      var iIcon = innerRow.appendTableCell('');
-      iContact.setBackgroundColor(mbg);
-      iIcon.setBackgroundColor(mbg);
-      iContact.getChild(0).asParagraph().setFontSize(10);
-      var iconBox = iIcon.appendTable().setBorderColor(memberFoodColor);
-      var iconBoxRow = iconBox.appendTableRow();
-      var iconBoxCell = iconBoxRow.appendTableCell(foodSymbol);
-      iconBoxCell.getChild(0).asParagraph().setForegroundColor(memberFoodColor).setFontSize(10).setAlignment(DocumentApp.HorizontalAlignment.CENTER);
+      var para = mC3.getChild(0).asParagraph();
+      if (cm.contact) {
+        para.appendText(cm.contact).setFontSize(10);
+        para.appendText('   ' + foodSymbol).setFontSize(10).setForegroundColor(memberFoodColor);
+      } else {
+        para.appendText(foodSymbol).setFontSize(10).setForegroundColor(memberFoodColor);
+      }
     }
   }
 
