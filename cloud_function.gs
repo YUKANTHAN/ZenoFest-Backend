@@ -310,7 +310,7 @@ function buildRegistrationPdf(details) {
       var mC3 = mrow.appendTableCell(cm.contact || '');
       var memberFood = cm.food || details.foodPref;
       var memberFoodColor = (memberFood.toLowerCase().indexOf('non') !== -1) ? '#EF4444' : '#22C55E';
-      var mC4 = mrow.appendTableCell(foodSymbol);
+      var mC4 = mrow.appendTableCell('');
       var mbg = (mi % 2 === 0) ? '#F6F5FF' : '#FFFFFF';
       mC1.setBackgroundColor(mbg);
       mC2.setBackgroundColor(mbg);
@@ -319,7 +319,10 @@ function buildRegistrationPdf(details) {
       mC1.getChild(0).asParagraph().setFontSize(10);
       mC2.getChild(0).asParagraph().setFontSize(10);
       mC3.getChild(0).asParagraph().setFontSize(10);
-      mC4.getChild(0).asParagraph().setFontSize(10).setForegroundColor(memberFoodColor).setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
+      var nestedTable = mC4.appendTable().setBorder(1).setBorderColor(memberFoodColor);
+      var nRow = nestedTable.appendTableRow();
+      var nCell = nRow.appendTableCell(foodSymbol);
+      nCell.getChild(0).asParagraph().setForegroundColor(memberFoodColor).setFontSize(8).setAlignment(DocumentApp.HorizontalAlignment.CENTER);
     }
   }
 
