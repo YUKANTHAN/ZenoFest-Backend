@@ -302,17 +302,22 @@ function buildRegistrationPdf(details) {
       var mrow = mtable.appendTableRow();
       var mC1 = mrow.appendTableCell(cm.role || '');
       var mC2 = mrow.appendTableCell(cm.name || '');
+      var mC3 = mrow.appendTableCell('');
       var memberFood = cm.food || details.foodPref;
       var memberFoodColor = (memberFood.toLowerCase().indexOf('non') !== -1) ? '#EF4444' : '#22C55E';
-      var contactWithFood = (cm.contact || '') + '  ' + foodSymbol;
-      var mC3 = mrow.appendTableCell(contactWithFood);
+      var para = mC3.getChild(0).asParagraph();
+      if (cm.contact) {
+        para.appendText(cm.contact).setFontSize(10);
+        para.appendText('  ' + foodSymbol).setFontSize(10).setForegroundColor(memberFoodColor);
+      } else {
+        para.appendText(foodSymbol).setFontSize(10).setForegroundColor(memberFoodColor);
+      }
       var mbg = (mi % 2 === 0) ? '#F6F5FF' : '#FFFFFF';
       mC1.setBackgroundColor(mbg);
       mC2.setBackgroundColor(mbg);
       mC3.setBackgroundColor(mbg);
       mC1.getChild(0).asParagraph().setFontSize(10);
       mC2.getChild(0).asParagraph().setFontSize(10);
-      mC3.getChild(0).asParagraph().setFontSize(10).setForegroundColor(memberFoodColor);
     }
   }
 
