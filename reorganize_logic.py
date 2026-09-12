@@ -47,6 +47,8 @@ OUTPUT_HEADERS = OUTPUT_ORDER_BEFORE_MEMBERS + [
     f"Member {n} Name" for n in range(2, MAX_MEMBERS + 1)
 ] + [
     f"Member {n} Contact" for n in range(2, MAX_MEMBERS + 1)
+] + [
+    f"Member {n} Food" for n in range(1, MAX_MEMBERS + 1)
 ]
 
 
@@ -82,7 +84,7 @@ def _first_nonempty(values):
     return ""
 
 
-def _clean_record(meta, members_by_slot, food_candidates):
+def _clean_record(meta, members_by_slot, food_candidates, member_foods=None):
     if not meta.get("Food Preference") and food_candidates:
         meta["Food Preference"] = food_candidates[0]
 
@@ -94,6 +96,16 @@ def _clean_record(meta, members_by_slot, food_candidates):
         row.append(_first_nonempty(members_by_slot[n]))
     for n in range(2, MAX_MEMBERS + 1):
         row.append("")  # contacts not mapped yet
+    # Per-member food preferences (leader, member 2, member 3)
+    if member_foods and len(member_foods) >= 1:
+        row.append(member_foods[0])  # leader
+    else:
+        row.append(meta.get("Food Preference", ""))
+    for n in range(2, MAX_MEMBERS + 1):
+        if member_foods and len(member_foods) >= n:
+            row.append(member_foods[n - 1])
+        else:
+            row.append(meta.get("Food Preference", ""))
     return row
 
 
@@ -108,6 +120,8 @@ def from_matrix(headers, rows):
         meta = {}
         members_by_slot = {n: [] for n in range(2, MAX_MEMBERS + 1)}
         food_candidates = []
+        member_foods = []
+        team_food_set = False
 
         for c, header in enumerate(headers):
             if header is None:
@@ -122,8 +136,10 @@ def from_matrix(headers, rows):
                 if mapped == "Food Preference":
                     if fmt:
                         meta.setdefault("Food Preference", fmt)
+                        if not team_food_set:
+                            member_foods.append(fmt)
+                            team_food_set = True
                 else:
-                    # Keep first non-empty across duplicate headers
                     if fmt and not meta.get(mapped):
                         meta[mapped] = fmt
                 continue
@@ -131,6 +147,7 @@ def from_matrix(headers, rows):
             if "food preference" in low:
                 if fmt:
                     food_candidates.append(fmt)
+                    member_foods.append(fmt)
                 continue
 
             if "member" in low:
@@ -140,7 +157,7 @@ def from_matrix(headers, rows):
                     if slot in members_by_slot and fmt:
                         members_by_slot[slot].append(fmt)
 
-        clean = _clean_record(meta, members_by_slot, food_candidates)
+        clean = _clean_record(meta, members_by_slot, food_candidates, member_foods)
         if clean is not None:
             out.append(clean)
 
@@ -154,8 +171,10 @@ def from_headers(values_with_headers):
 
     for record in values_with_headers:
         meta = {}
-        members_by_slot = {n: [] for n in range(2, MAX_MEMBERS + 1)}  # slot -> names
+        members_by_slot = {n: [] for n in range(2, MAX_MEMBERS + 1)}
         food_candidates = []
+        member_foods = []
+        team_food_set = False
         import re
 
         for header, value in record.items():
@@ -164,25 +183,26 @@ def from_headers(values_with_headers):
             h = str(header)
             low = h.lower()
 
-            # Always-on exact fields
             if h in ALWAYS_HEADER:
                 mapped = ALWAYS_HEADER[h]
                 fmt = _fmt(value)
                 if mapped == "Food Preference":
                     if fmt:
                         meta.setdefault("Food Preference", fmt)
+                        if not team_food_set:
+                            member_foods.append(fmt)
+                            team_food_set = True
                 else:
                     if fmt and not meta.get(mapped):
                         meta[mapped] = fmt
                 continue
 
-            # Duplicate "Food Preference ..." variants -> keep first non-empty
             if "food preference" in low:
                 if _fmt(value):
                     food_candidates.append(_fmt(value))
+                    member_foods.append(_fmt(value))
                 continue
 
-            # Member name detection: header like "Member 2 Name", "Member 3 Name 3"
             if "member" in low:
                 m = re.search(r"member\s*([2-4])", h, re.IGNORECASE)
                 if m:
@@ -190,7 +210,7 @@ def from_headers(values_with_headers):
                     if slot in members_by_slot and _fmt(value):
                         members_by_slot[slot].append(_fmt(value))
 
-        clean = _clean_record(meta, members_by_slot, food_candidates)
+        clean = _clean_record(meta, members_by_slot, food_candidates, member_foods)
         if clean is not None:
             out.append(clean)
 

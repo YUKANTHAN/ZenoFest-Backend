@@ -131,8 +131,7 @@ function sendConfirmationEmail(row) {
     ['COLLEGE', college],
     ['TEAM SIZE', teamSize + ' members'],
     ['TECH EVENT', techEvent],
-    ['NON-TECH EVENT', nonTechEvent],
-    ['FOOD PREFERENCE', foodPref]
+    ['NON-TECH EVENT', nonTechEvent]
   ];
   var rowsHtml = '';
   for (var i = 0; i < fields.length; i++) {
@@ -149,10 +148,14 @@ function sendConfirmationEmail(row) {
   if (members.length) {
     for (var k = 0; k < members.length; k++) {
       var mbg = (k % 2 === 0) ? '#ffffff' : '#f6f5ff';
+      var contactHtml = members[k].contact ? members[k].contact : '';
+      var memberFood = members[k].food || foodPref;
+      var memberFoodColor = (memberFood.toLowerCase().indexOf('non') !== -1) ? '#ef4444' : '#22c55e';
+      var foodIcon = '<div style="float:right;display:flex;align-items:center;height:100%;"><div style="display:inline-block;width:16px;height:16px;border:2px solid ' + memberFoodColor + ';border-radius:3px;text-align:center;line-height:12px;"><div style="width:8px;height:8px;background:' + memberFoodColor + ';border-radius:50%;margin:2px auto;"></div></div></div>';
       membersHtml += ''
         + '<tr style="background:' + mbg + ';">'
         + '<td style="padding:11px 16px;color:#7c3aed;font-size:12px;font-weight:700;letter-spacing:1px;width:38%;border-bottom:1px solid #eef0f6;text-transform:uppercase;">' + members[k].role + '</td>'
-        + '<td style="padding:11px 16px;color:#1e293b;font-size:14px;font-weight:600;border-bottom:1px solid #eef0f6;">' + members[k].name + (members[k].contact ? ' &nbsp;&middot;&nbsp; ' + members[k].contact : '') + '</td>'
+        + '<td style="padding:11px 16px;color:#1e293b;font-size:14px;font-weight:600;border-bottom:1px solid #eef0f6;">' + members[k].name + (contactHtml ? ' &nbsp;&middot;&nbsp; ' + contactHtml : '') + foodIcon + '</td>'
         + '</tr>';
     }
   }
@@ -255,8 +258,8 @@ function buildRegistrationPdf(details) {
   var hc2 = hr.appendTableCell('VALUE');
   hc1.setBackgroundColor('#4F46E5');
   hc2.setBackgroundColor('#4F46E5');
-  hc1.getChild(0).asParagraph().setForegroundColor('#FFFFFF').setBold(true);
-  hc2.getChild(0).asParagraph().setForegroundColor('#FFFFFF').setBold(true);
+  hc1.getChild(0).asParagraph().setBold(true);
+  hc2.getChild(0).asParagraph().setBold(true);
 
   var rows = [
     ['Team ID', details.teamId],
@@ -264,8 +267,7 @@ function buildRegistrationPdf(details) {
     ['College', details.college],
     ['Team Size', details.teamSize + ' members'],
     ['Technical Event', details.techEvent],
-    ['Non-Technical Event', details.nonTechEvent],
-    ['Food Preference', details.foodPref]
+    ['Non-Technical Event', details.nonTechEvent]
   ];
   for (var i = 0; i < rows.length; i++) {
     var tr = table.appendTableRow();
@@ -289,25 +291,31 @@ function buildRegistrationPdf(details) {
     mhr.appendTableCell('ROLE').setBackgroundColor('#4F46E5');
     mhr.appendTableCell('NAME').setBackgroundColor('#4F46E5');
     mhr.appendTableCell('CONTACT').setBackgroundColor('#4F46E5');
-    var hdrCells = mhr.getCells();
-    for (var h = 0; h < hdrCells.length; h++) {
-      hdrCells[h].getChild(0).asParagraph().setForegroundColor('#FFFFFF').setBold(true);
-      hdrCells[h].getChild(0).asParagraph().setFontSize(10);
+    mhr.appendTableCell('FOOD').setBackgroundColor('#4F46E5');
+    for (var h = 0; h < mhr.getNumChildren(); h++) {
+      mhr.getChild(h).getChild(0).asParagraph().setBold(true);
+      mhr.getChild(h).getChild(0).asParagraph().setFontSize(10);
     }
 
+    var foodSymbol = '\u25CF';
     for (var mi = 0; mi < details.members.length; mi++) {
       var cm = details.members[mi];
       var mrow = mtable.appendTableRow();
       var mC1 = mrow.appendTableCell(cm.role || '');
       var mC2 = mrow.appendTableCell(cm.name || '');
       var mC3 = mrow.appendTableCell(cm.contact || '');
+      var memberFood = cm.food || details.foodPref;
+      var memberFoodColor = (memberFood.toLowerCase().indexOf('non') !== -1) ? '#EF4444' : '#22C55E';
+      var mC4 = mrow.appendTableCell(foodSymbol);
       var mbg = (mi % 2 === 0) ? '#F6F5FF' : '#FFFFFF';
       mC1.setBackgroundColor(mbg);
       mC2.setBackgroundColor(mbg);
       mC3.setBackgroundColor(mbg);
+      mC4.setBackgroundColor(mbg);
       mC1.getChild(0).asParagraph().setFontSize(10);
       mC2.getChild(0).asParagraph().setFontSize(10);
       mC3.getChild(0).asParagraph().setFontSize(10);
+      mC4.getChild(0).asParagraph().setFontSize(10).setForegroundColor(memberFoodColor);
     }
   }
 
