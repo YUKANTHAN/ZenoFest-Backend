@@ -151,7 +151,7 @@ function sendConfirmationEmail(row) {
       var contactHtml = members[k].contact ? members[k].contact : '';
       var memberFood = members[k].food || foodPref;
       var memberFoodColor = (memberFood.toLowerCase().indexOf('non') !== -1) ? '#ef4444' : '#22c55e';
-      var foodIcon = '<div style="float:right;display:flex;align-items:center;height:100%;"><div style="display:inline-block;width:16px;height:16px;border:2px solid ' + memberFoodColor + ';border-radius:3px;text-align:center;line-height:12px;"><div style="width:8px;height:8px;background:' + memberFoodColor + ';border-radius:50%;margin:2px auto;"></div></div></div>';
+      var foodIcon = '&nbsp;&nbsp;<span style="display:inline-block;width:14px;height:14px;border:2px solid ' + memberFoodColor + ';border-radius:3px;vertical-align:middle;text-align:center;line-height:10px;font-size:0;"><span style="display:inline-block;width:6px;height:6px;background:' + memberFoodColor + ';border-radius:50%;vertical-align:middle;"></span></span>';
       membersHtml += ''
         + '<tr style="background:' + mbg + ';">'
         + '<td style="padding:11px 16px;color:#7c3aed;font-size:12px;font-weight:700;letter-spacing:1px;width:38%;border-bottom:1px solid #eef0f6;text-transform:uppercase;">' + members[k].role + '</td>'
