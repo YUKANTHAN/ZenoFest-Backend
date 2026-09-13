@@ -17,6 +17,26 @@ Two helper paths are provided:
 # FIELD MAPS
 # ---------------------------------------------------------------------------
 
+# Explicit per-team-size column index (0-based) -> "Food" output slot, in the
+# order [leader, member 2, member 3]. The form uses conditional sections, so
+# the food answers for each member live in DIFFERENT physical columns depending
+# on team size, and for a 3-member team the leader's food question appears
+# AFTER the member-2 food question in the raw sheet (verified against rows where
+# members chose different foods). Index-based mapping beats scanning header text.
+FOOD_COLS_BY_SIZE = {
+    1: [21],            # solo: leader only
+    2: [26, 29],        # leader, member 2
+    3: [14, 13, 18],    # leader, member 2, member 3  (raw order is m2, leader, m3!)
+}
+
+# For solo teams the leader's details live in a generic "Name/Contact" block,
+# since the "Team Leader Name" question isn't shown for team size 1.
+SOLO_NAME_HEADER = "Name"
+
+# Header text used for the "Select Team Size" question. Its value decides which
+# conditional section's columns actually hold this team's answers.
+TEAM_SIZE_HEADER = "Select Team Size"
+
 # Exact header text -> output field, for always-present columns.
 ALWAYS_HEADER = {
     "Timestamp": "Timestamp",
@@ -84,9 +104,13 @@ def _first_nonempty(values):
     return ""
 
 
-def _clean_record(meta, members_by_slot, food_candidates, member_foods=None):
-    if not meta.get("Food Preference") and food_candidates:
-        meta["Food Preference"] = food_candidates[0]
+def _clean_record(meta, members_by_slot, food_candidates, food_by_col=None):
+    # Per-member food preferences (leader, member 2, member 3)
+    foods = _member_foods(meta.get("Team Size"), food_by_col)
+
+    if not meta.get("Food Preference"):
+        meta["Food Preference"] = foods[0] if foods else (
+            food_candidates[0] if food_candidates else "")
 
     if not meta.get("Team Name") and not meta.get("Timestamp"):
         return None
@@ -96,17 +120,31 @@ def _clean_record(meta, members_by_slot, food_candidates, member_foods=None):
         row.append(_first_nonempty(members_by_slot[n]))
     for n in range(2, MAX_MEMBERS + 1):
         row.append("")  # contacts not mapped yet
-    # Per-member food preferences (leader, member 2, member 3)
-    if member_foods and len(member_foods) >= 1:
-        row.append(member_foods[0])  # leader
+    if foods and len(foods) >= 1:
+        row.append(foods[0])  # leader
     else:
         row.append(meta.get("Food Preference", ""))
     for n in range(2, MAX_MEMBERS + 1):
-        if member_foods and len(member_foods) >= n:
-            row.append(member_foods[n - 1])
+        if foods and len(foods) >= n:
+            row.append(foods[n - 1])
         else:
             row.append(meta.get("Food Preference", ""))
     return row
+
+
+def _member_foods(team_size, food_by_col):
+    """Rebuild the member foods as [leader, m2, m3] using the explicit
+    per-team-size column map. `food_by_col` maps a raw column index to the
+    food value typed there ("" if that column held nothing)."""
+    food_by_col = food_by_col or {}
+    try:
+        key = int(str(team_size).strip())
+    except (TypeError, ValueError):
+        key = None
+    cols = FOOD_COLS_BY_SIZE.get(key) if key is not None else None
+    if not cols:
+        return list(food_by_col.values())[:MAX_MEMBERS]
+    return [_fmt(food_by_col.get(c, "")) for c in cols]
 
 
 def from_matrix(headers, rows):
@@ -120,7 +158,8 @@ def from_matrix(headers, rows):
         meta = {}
         members_by_slot = {n: [] for n in range(2, MAX_MEMBERS + 1)}
         food_candidates = []
-        member_foods = []
+        food_by_col = {}
+        solo_name = ""
         team_food_set = False
 
         for c, header in enumerate(headers):
@@ -131,23 +170,27 @@ def from_matrix(headers, rows):
             value = row[c] if c < len(row) else None
             fmt = _fmt(value)
 
+            if "food preference" in low:
+                if fmt:
+                    food_candidates.append(fmt)
+                    food_by_col[c] = fmt
+                continue
+
+            if h == SOLO_NAME_HEADER and fmt and not solo_name:
+                solo_name = fmt
+                continue
+
             if h in ALWAYS_HEADER:
                 mapped = ALWAYS_HEADER[h]
                 if mapped == "Food Preference":
                     if fmt:
                         meta.setdefault("Food Preference", fmt)
                         if not team_food_set:
-                            member_foods.append(fmt)
+                            food_by_col[c] = fmt
                             team_food_set = True
                 else:
                     if fmt and not meta.get(mapped):
                         meta[mapped] = fmt
-                continue
-
-            if "food preference" in low:
-                if fmt:
-                    food_candidates.append(fmt)
-                    member_foods.append(fmt)
                 continue
 
             if "member" in low:
@@ -157,7 +200,11 @@ def from_matrix(headers, rows):
                     if slot in members_by_slot and fmt:
                         members_by_slot[slot].append(fmt)
 
-        clean = _clean_record(meta, members_by_slot, food_candidates, member_foods)
+        if solo_name and str(meta.get("Team Size", "")).strip() == "1" \
+                and not meta.get("Leader Name"):
+            meta["Leader Name"] = solo_name
+
+        clean = _clean_record(meta, members_by_slot, food_candidates, food_by_col)
         if clean is not None:
             out.append(clean)
 
@@ -173,44 +220,53 @@ def from_headers(values_with_headers):
         meta = {}
         members_by_slot = {n: [] for n in range(2, MAX_MEMBERS + 1)}
         food_candidates = []
-        member_foods = []
+        food_by_col = {}
+        solo_name = ""
         team_food_set = False
         import re
 
-        for header, value in record.items():
+        for col_idx, (header, value) in enumerate(record.items()):
             if header is None:
                 continue
             h = str(header)
             low = h.lower()
+            fmt = _fmt(value)
+
+            if "food preference" in low:
+                if fmt:
+                    food_candidates.append(fmt)
+                    food_by_col[col_idx] = fmt
+                continue
+
+            if h == SOLO_NAME_HEADER and fmt and not solo_name:
+                solo_name = fmt
+                continue
 
             if h in ALWAYS_HEADER:
                 mapped = ALWAYS_HEADER[h]
-                fmt = _fmt(value)
                 if mapped == "Food Preference":
                     if fmt:
                         meta.setdefault("Food Preference", fmt)
                         if not team_food_set:
-                            member_foods.append(fmt)
+                            food_by_col[col_idx] = fmt
                             team_food_set = True
                 else:
                     if fmt and not meta.get(mapped):
                         meta[mapped] = fmt
                 continue
 
-            if "food preference" in low:
-                if _fmt(value):
-                    food_candidates.append(_fmt(value))
-                    member_foods.append(_fmt(value))
-                continue
-
             if "member" in low:
                 m = re.search(r"member\s*([2-4])", h, re.IGNORECASE)
                 if m:
                     slot = int(m.group(1))
-                    if slot in members_by_slot and _fmt(value):
-                        members_by_slot[slot].append(_fmt(value))
+                    if slot in members_by_slot and fmt:
+                        members_by_slot[slot].append(fmt)
 
-        clean = _clean_record(meta, members_by_slot, food_candidates, member_foods)
+        if solo_name and str(meta.get("Team Size", "")).strip() == "1" \
+                and not meta.get("Leader Name"):
+            meta["Leader Name"] = solo_name
+
+        clean = _clean_record(meta, members_by_slot, food_candidates, food_by_col)
         if clean is not None:
             out.append(clean)
 
