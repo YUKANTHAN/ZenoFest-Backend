@@ -264,7 +264,7 @@ def create_app(client=None):
             raw_ws = open_raw_sheet(client)
             matrix = raw_ws.get_all_values()
             headers = matrix[0] if matrix else []
-            recent = matrix[-8:] if len(matrix) > 1 else []
+            recent = matrix[-60:] if len(matrix) > 1 else []
             return jsonify({
                 "header_count": len(headers),
                 "headers": headers,
