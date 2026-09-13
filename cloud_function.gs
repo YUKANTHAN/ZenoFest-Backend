@@ -302,36 +302,16 @@ function buildRegistrationPdf(details) {
     mHC3.merge();
 
     var foodSymbol = '\u25CF';
-    var leaderFood = details.leader_food || details.food_preference || 'Vegetarian';
-    var leaderFoodColor = (leaderFood.toLowerCase().indexOf('non') !== -1) ? '#EF4444' : '#22C55E';
-    var lrow = mtable.appendTableRow();
-    var lC1 = lrow.appendTableCell('TEAM LEADER');
-    var lC2 = lrow.appendTableCell(details.leader_name || '');
-    var lC3 = lrow.appendTableCell(details.leader_contact || '');
-    var lC4 = lrow.appendTableCell('');
-    lC1.setBackgroundColor('#F6F5FF'); lC2.setBackgroundColor('#F6F5FF'); lC3.setBackgroundColor('#F6F5FF'); lC4.setBackgroundColor('#F6F5FF');
-    lC1.setPaddingTop(3).setPaddingBottom(3);
-    lC2.setPaddingTop(3).setPaddingBottom(3);
-    lC3.setPaddingTop(3).setPaddingBottom(3);
-    lC4.setPaddingTop(3).setPaddingBottom(3);
-    lC1.getChild(0).asParagraph().setFontSize(10).setForegroundColor('#111111');
-    lC2.getChild(0).asParagraph().setFontSize(10).setForegroundColor('#111111');
-    lC3.getChild(0).asParagraph().setFontSize(10).setForegroundColor('#111111');
-    var lIconPara = lC4.getChild(0).asParagraph();
-    lIconPara.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
-    lIconPara.appendText(foodSymbol).setFontSize(10).setForegroundColor(leaderFoodColor);
-
-    var roles = ['MEMBER 2', 'MEMBER 3'];
     for (var mi = 0; mi < details.members.length; mi++) {
       var cm = details.members[mi];
       var memberFood = cm.food || details.foodPref;
       var memberFoodColor = (memberFood.toLowerCase().indexOf('non') !== -1) ? '#EF4444' : '#22C55E';
       var mrow = mtable.appendTableRow();
-      var mC1 = mrow.appendTableCell(roles[mi] || '');
+      var mC1 = mrow.appendTableCell(cm.role || ('MEMBER ' + (mi + 1)));
       var mC2 = mrow.appendTableCell(cm.name || '');
       var mC3 = mrow.appendTableCell(cm.contact || '');
       var mC4 = mrow.appendTableCell('');
-      var mbg = (mi % 2 === 0) ? '#FFFFFF' : '#F6F5FF';
+      var mbg = (mi % 2 === 0) ? '#F6F5FF' : '#FFFFFF';
       mC1.setBackgroundColor(mbg); mC2.setBackgroundColor(mbg); mC3.setBackgroundColor(mbg); mC4.setBackgroundColor(mbg);
       mC1.setPaddingTop(3).setPaddingBottom(3);
       mC2.setPaddingTop(3).setPaddingBottom(3);
