@@ -107,6 +107,15 @@ def get_or_create_organized(client):
     return ws
 
 
+def colname(n):
+    """Excel-style column name for a 1-based column index (colname(1)='A')."""
+    name = ""
+    while n > 0:
+        n, rem = divmod(n - 1, 26)
+        name = chr(ord("A") + rem) + name
+    return name
+
+
 def _row_key(row):
     """Timestamp + team name as a stable identity for dedup."""
     ts = row[0] if row else ""
@@ -187,14 +196,34 @@ def sync(client=None, raw_ws=None, organized_ws=None):
         print("No new responses to append.")
         return 0, []
 
-    # Header may be missing if sheet was created empty; ensure it.
+    # Always make sure the header row matches the current output schema, and
+    # write new rows at an EXPLICIT range. Never use values:append auto-anchoring
+    # (gspread append_rows): once the sheet becomes ragged, the API anchors each
+    # append further right and the columns drift (rows landed at col 17, 33, 49,
+    # ... on 9/12 because of this).
     first = organized_ws.get_all_values()
     if not first or all(not c for c in first[0]):
         organized_ws.update(range_name="A1", values=[rl.OUTPUT_HEADERS])
         start_row = 2
     else:
+        # Keep the header fresh (schema may have grown; e.g. member food cols
+        # were added after older rows).
+        if list(first[0]) != list(rl.OUTPUT_HEADERS):
+            # Only extend/replace the header row; data rows are left alone.
+            max_old = len(first[0])
+            max_new = len(rl.OUTPUT_HEADERS)
+            new_header = first[0][: max(max_old, max_new)]
+            for i in range(min(max_old, max_new), max(max_old, max_new)):
+                new_header[i] = rl.OUTPUT_HEADERS[i] if i < max_new else ""
+            organized_ws.update(range_name="A1", values=[new_header])
         start_row = len(first) + 1
-    organized_ws.append_rows(to_append, value_input_option="USER_ENTERED")
+    end_col = max(2, len(rl.OUTPUT_HEADERS))
+    end_row = start_row + len(to_append) - 1
+    organized_ws.update(
+        range_name=f"A{start_row}:{colname(end_col)}{end_row}",
+        values=to_append,
+        value_input_option="USER_ENTERED",
+    )
     print(f"Appended {len(to_append)} team row(s).")
 
     return len(to_append), _new_rows_info(to_append, start_row)

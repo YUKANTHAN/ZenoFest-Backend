@@ -25,9 +25,35 @@ class FakeWorksheet:
         for r in rows:
             self.rows.append(r)
 
-    def update(self, name, data):
-        for i, r in enumerate(data):
-            self.rows = [r] + self.rows[1:]
+    def update(self, range_name=None, values=None, value_input_option=None):
+        # range_name like "A2:R2" -> paste values at that offset.
+        if not values:
+            return
+        import re
+        m = re.match(r"([A-Z]+)(\d+)(?::([A-Z]+)(\d+))?", str(range_name) or "")
+        if not m:
+            return
+        col_start = col_to_idx(m.group(1))
+        start_row = int(m.group(2))
+        for i, r in enumerate(values):
+            target = start_row - 1 + i  # FakeWorksheet convention: index 0 = row 1
+            if target < 0:
+                continue
+            while len(self.rows) <= target:
+                self.rows.append([])
+            row = self.rows[target]
+            for j, v in enumerate(r):
+                idx = col_start - 1 + j
+                while len(row) <= idx:
+                    row.append("")
+                row[idx] = v
+
+
+def col_to_idx(name):
+    idx = 0
+    for ch in str(name).upper():
+        idx = idx * 26 + (ord(ch) - ord("A") + 1)
+    return idx
 
 
 def build_raw_from_xlsx(path):
