@@ -322,7 +322,7 @@ function buildRegistrationPdf(details) {
       cell1.setBackgroundColor(mbg);
       cell2.setBackgroundColor(mbg);
       cell1.getChild(0).asParagraph().setFontSize(10).setForegroundColor('#111111');
-      innerTbl.setColumnWidth(0, 120);
+      innerTbl.setColumnWidth(0, 152);
       innerTbl.setColumnWidth(1, 24);
       var iconPara = cell2.getChild(0).asParagraph();
       iconPara.setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
