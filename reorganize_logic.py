@@ -142,9 +142,14 @@ def _member_foods(team_size, food_by_col):
     except (TypeError, ValueError):
         key = None
     cols = FOOD_COLS_BY_SIZE.get(key) if key is not None else None
-    if not cols:
-        return list(food_by_col.values())[:MAX_MEMBERS]
-    return [_fmt(food_by_col.get(c, "")) for c in cols]
+    result = []
+    if cols:
+        result = [_fmt(food_by_col.get(c, "")) for c in cols]
+    else:
+        result = list(food_by_col.values())[:MAX_MEMBERS]
+    while len(result) < MAX_MEMBERS:
+        result.append("")
+    return result
 
 
 def from_matrix(headers, rows):
