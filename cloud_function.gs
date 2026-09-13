@@ -313,19 +313,15 @@ function buildRegistrationPdf(details) {
       mC3.setBackgroundColor(mbg);
       mC1.getChild(0).asParagraph().setFontSize(10);
       mC2.getChild(0).asParagraph().setFontSize(10);
-      var contactPara = mC3.getChild(0).asParagraph();
-      contactPara.setAttributes({FONT_SIZE: 10, FONT_FAMILY: 'Arial'});
-      var tabStops = [];
-      tabStops.push({
-        alignment: DocumentApp.TabStopType.RIGHT,
-        position: 150
-      });
-      contactPara.setTabStops(tabStops);
-      var cellText = (cm.contact || '') + '\t' + foodSymbol;
-      contactPara.appendText(cellText);
-      var allText = contactPara.editAsText();
-      var iconIdx = cellText.indexOf(foodSymbol);
-      allText.setForegroundColor(iconIdx, iconIdx + 1, memberFoodColor);
+      var innerTbl = mC3.appendTable();
+      innerTbl.setBorderWidth(0);
+      var innerR = innerTbl.appendTableRow();
+      var cell1 = innerR.appendTableCell(cm.contact || '');
+      var cell2 = innerR.appendTableCell(foodSymbol);
+      cell1.setBackgroundColor(mbg);
+      cell2.setBackgroundColor(mbg);
+      cell1.getChild(0).asParagraph().setFontSize(10);
+      cell2.getChild(0).asParagraph().setFontSize(10).setForegroundColor(memberFoodColor);
     }
   }
 
