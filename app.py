@@ -255,6 +255,24 @@ def create_app(client=None):
             {"event": e, "team_id": rl.make_team_id(e, 12)} for e in events
         ]}), 200
 
+    @app.get("/debug/raw")
+    def debug_raw():
+        """Dev helper: dump raw sheet headers + last data row so we can verify
+        the true column order (esp. for member food preferences)."""
+        try:
+            client = app.config["CLIENT"]
+            raw_ws = open_raw_sheet(client)
+            matrix = raw_ws.get_all_values()
+            headers = matrix[0] if matrix else []
+            last_data = matrix[-1] if len(matrix) > 1 else []
+            return jsonify({
+                "header_count": len(headers),
+                "headers": headers,
+                "last_row_values": last_data,
+            }), 200
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
     return app
 
 
