@@ -337,6 +337,8 @@ function buildRegistrationPdf(details) {
   body.appendParagraph('');
   body.appendParagraph('Best regards,')
     .setAttributes({ FONT_SIZE: 10, FONT_FAMILY: 'Arial' });
+  body.appendParagraph('Yukanthan')
+    .setAttributes({ FONT_SIZE: 10, FONT_FAMILY: 'Arial' });
   body.appendParagraph('ZenoFest 2026 Team')
     .setAttributes({ FONT_SIZE: 10, FONT_FAMILY: 'Arial' });
 
