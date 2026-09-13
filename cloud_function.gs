@@ -324,7 +324,9 @@ function buildRegistrationPdf(details) {
       cell1.getChild(0).asParagraph().setFontSize(10).setForegroundColor('#111111');
       innerTbl.setColumnWidth(0, 120);
       innerTbl.setColumnWidth(1, 24);
-      cell2.getChild(0).asParagraph().appendText(foodSymbol).setFontSize(10).setForegroundColor(memberFoodColor).setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
+      var iconPara = cell2.getChild(0).asParagraph();
+      iconPara.setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
+      iconPara.appendText(foodSymbol).setFontSize(10).setForegroundColor(memberFoodColor);
     }
   }
 
