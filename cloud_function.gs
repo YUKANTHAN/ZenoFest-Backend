@@ -311,17 +311,23 @@ function buildRegistrationPdf(details) {
       mC1.setBackgroundColor(mbg);
       mC2.setBackgroundColor(mbg);
       mC3.setBackgroundColor(mbg);
-      mC1.getChild(0).asParagraph().setFontSize(10);
-      mC2.getChild(0).asParagraph().setFontSize(10);
+      mC1.getChild(0).asParagraph().setFontSize(10).setForegroundColor('#111111');
+      mC2.getChild(0).asParagraph().setFontSize(10).setForegroundColor('#111111');
       var innerTbl = mC3.appendTable();
       innerTbl.setBorderWidth(0);
       var innerR = innerTbl.appendTableRow();
       var cell1 = innerR.appendTableCell(cm.contact || '');
-      var cell2 = innerR.appendTableCell(foodSymbol);
+      var cell2 = innerR.appendTableCell('');
       cell1.setBackgroundColor(mbg);
       cell2.setBackgroundColor(mbg);
-      cell1.getChild(0).asParagraph().setFontSize(10);
-      cell2.getChild(0).asParagraph().setFontSize(10).setForegroundColor(memberFoodColor);
+      cell1.getChild(0).asParagraph().setFontSize(10).setForegroundColor('#111111');
+      innerTbl.setColumnWidth(0, 120);
+      innerTbl.setColumnWidth(1, 26);
+      var iconTbl = cell2.appendTable().setBorderColor(memberFoodColor);
+      iconTbl.setBorderWidth(1);
+      var iconRow = iconTbl.appendTableRow();
+      var iconCell = iconRow.appendTableCell(foodSymbol);
+      iconCell.getChild(0).asParagraph().setFontSize(10).setForegroundColor(memberFoodColor).setAlignment(DocumentApp.HorizontalAlignment.CENTER);
     }
   }
 
