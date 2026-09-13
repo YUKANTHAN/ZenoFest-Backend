@@ -297,6 +297,7 @@ function buildRegistrationPdf(details) {
     mHC1.getChild(0).asParagraph().setForegroundColor('#FFFFFF').setBold(true).setFontSize(10);
     mHC2.getChild(0).asParagraph().setForegroundColor('#FFFFFF').setBold(true).setFontSize(10);
     mHC3.getChild(0).asParagraph().setForegroundColor('#FFFFFF').setBold(true).setFontSize(10);
+    mtable.setColumnWidth(2, 176);
 
     var foodSymbol = '\u25CF';
     for (var mi = 0; mi < details.members.length; mi++) {
@@ -313,16 +314,17 @@ function buildRegistrationPdf(details) {
       mC3.setBackgroundColor(mbg);
       mC1.getChild(0).asParagraph().setFontSize(10).setForegroundColor('#111111');
       mC2.getChild(0).asParagraph().setFontSize(10).setForegroundColor('#111111');
-      var contactPara = mC3.getChild(0).asParagraph();
-      contactPara.setAttributes({FONT_SIZE: 10, FONT_FAMILY: 'Arial', FOREGROUND_COLOR: '#111111'});
-      contactPara.setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
-      if (cm.contact) {
-        contactPara.appendText(cm.contact);
-      }
-      contactPara.appendText('  ' + foodSymbol);
-      var iconText = contactPara.editAsText();
-      var iconPos = contactPara.getText().indexOf(foodSymbol);
-      iconText.setForegroundColor(iconPos, iconPos + 1, memberFoodColor);
+      var innerTbl = mC3.appendTable();
+      innerTbl.setBorderWidth(0);
+      var innerR = innerTbl.appendTableRow();
+      var cell1 = innerR.appendTableCell(cm.contact || '');
+      var cell2 = innerR.appendTableCell('');
+      cell1.setBackgroundColor(mbg);
+      cell2.setBackgroundColor(mbg);
+      cell1.getChild(0).asParagraph().setFontSize(10).setForegroundColor('#111111');
+      innerTbl.setColumnWidth(0, 120);
+      innerTbl.setColumnWidth(1, 24);
+      cell2.getChild(0).asParagraph().appendText(foodSymbol).setFontSize(10).setForegroundColor(memberFoodColor).setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
     }
   }
 
