@@ -299,7 +299,6 @@ function buildRegistrationPdf(details) {
     mHC1.getChild(0).asParagraph().setForegroundColor('#FFFFFF').setBold(true).setFontSize(10);
     mHC2.getChild(0).asParagraph().setForegroundColor('#FFFFFF').setBold(true).setFontSize(10);
     mHC3.getChild(0).asParagraph().setForegroundColor('#FFFFFF').setBold(true).setFontSize(10);
-    mHC4.setBackgroundColor('#4F46E5');
     mHC3.merge();
 
     var foodSymbol = '\u25CF';
@@ -345,7 +344,6 @@ function buildRegistrationPdf(details) {
       iconPara.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
       iconPara.appendText(foodSymbol).setFontSize(10).setForegroundColor(memberFoodColor);
     }
-    mtable.setColumnWidth(3, 30);
   }
 
   body.appendParagraph('');
