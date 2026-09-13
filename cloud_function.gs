@@ -313,21 +313,16 @@ function buildRegistrationPdf(details) {
       mC3.setBackgroundColor(mbg);
       mC1.getChild(0).asParagraph().setFontSize(10).setForegroundColor('#111111');
       mC2.getChild(0).asParagraph().setFontSize(10).setForegroundColor('#111111');
-      var innerTbl = mC3.appendTable();
-      innerTbl.setBorderWidth(0);
-      var innerR = innerTbl.appendTableRow();
-      var cell1 = innerR.appendTableCell(cm.contact || '');
-      var cell2 = innerR.appendTableCell('');
-      cell1.setBackgroundColor(mbg);
-      cell2.setBackgroundColor(mbg);
-      cell1.getChild(0).asParagraph().setFontSize(10).setForegroundColor('#111111');
-      innerTbl.setColumnWidth(0, 120);
-      innerTbl.setColumnWidth(1, 26);
-      var iconTbl = cell2.appendTable().setBorderColor(memberFoodColor);
-      iconTbl.setBorderWidth(1);
-      var iconRow = iconTbl.appendTableRow();
-      var iconCell = iconRow.appendTableCell(foodSymbol);
-      iconCell.getChild(0).asParagraph().setFontSize(10).setForegroundColor(memberFoodColor).setAlignment(DocumentApp.HorizontalAlignment.CENTER);
+      var contactPara = mC3.getChild(0).asParagraph();
+      contactPara.setAttributes({FONT_SIZE: 10, FONT_FAMILY: 'Arial', FOREGROUND_COLOR: '#111111'});
+      contactPara.setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
+      if (cm.contact) {
+        contactPara.appendText(cm.contact);
+      }
+      contactPara.appendText('  ' + foodSymbol);
+      var iconText = contactPara.editAsText();
+      var iconPos = contactPara.getText().indexOf(foodSymbol);
+      iconText.setForegroundColor(iconPos, iconPos + 1, memberFoodColor);
     }
   }
 
