@@ -299,6 +299,8 @@ function buildRegistrationPdf(details) {
     mHC1.getChild(0).asParagraph().setForegroundColor('#FFFFFF').setBold(true).setFontSize(10);
     mHC2.getChild(0).asParagraph().setForegroundColor('#FFFFFF').setBold(true).setFontSize(10);
     mHC3.getChild(0).asParagraph().setForegroundColor('#FFFFFF').setBold(true).setFontSize(10);
+    mHC4.setBackgroundColor('#4F46E5');
+    mHC3.merge();
     mtable.setColumnWidth(3, 30);
 
     var foodSymbol = '\u25CF';
