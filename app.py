@@ -215,15 +215,8 @@ def sync(client=None, raw_ws=None, organized_ws=None):
         organized_ws.update(range_name="A1", values=[rl.OUTPUT_HEADERS])
         start_row = 2
     else:
-        # Keep the header fresh (schema may have grown; e.g. member food cols
-        # were added after older rows).
-        if list(first[0]) != list(rl.OUTPUT_HEADERS):
-            max_old = len(first[0])
-            max_new = len(rl.OUTPUT_HEADERS)
-            new_header = first[0][: max(max_old, max_new)]
-            for i in range(min(max_old, max_new), max(max_old, max_new)):
-                new_header[i] = rl.OUTPUT_HEADERS[i] if i < max_new else ""
-            organized_ws.update(range_name="A1", values=[new_header])
+        # Always overwrite header row to match current schema.
+        organized_ws.update(range_name="A1", values=[rl.OUTPUT_HEADERS])
         # Scan for the first empty row (all cells blank) and append there.
         start_row = None
         for i, row in enumerate(first[1:], start=2):
