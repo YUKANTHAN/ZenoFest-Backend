@@ -43,9 +43,12 @@ ALWAYS_HEADER = {
     "Email Address": "Email",
     "Team Name": "Team Name",
     "College Name": "College",
-    "Department & Year": "Department & Year",
+    "Department": "Department",
+    "Year": "Year",
+    "Year of study": "Year",
     "Team Leader Name": "Leader Name",
     "Team Leader Contact (Phone Number)": "Leader Contact",
+    "Team Leader Email": "Leader Email",
     "Select Team Size": "Team Size",
     "Select Technical Event (Choose any 1)": "Tech Event",
     "Select Non-Technical Event (Choose any 1)": "NonTech Event",
@@ -59,12 +62,14 @@ ALWAYS_HEADER = {
 # Every team has exactly 3 members (leader + 2), so we only keep slots 2 and 3.
 MAX_MEMBERS = 3
 OUTPUT_ORDER_BEFORE_MEMBERS = [
-    "Timestamp", "Email", "Team Name", "College", "Department & Year",
-    "Leader Name", "Leader Contact", "Team Size",
+    "Timestamp", "Email", "Team Name", "College", "Department", "Year",
+    "Leader Name", "Leader Contact", "Leader Email", "Team Size",
     "Tech Event", "NonTech Event", "Food Preference", "Payment Screenshot",
 ]
 OUTPUT_HEADERS = OUTPUT_ORDER_BEFORE_MEMBERS + [
     f"Member {n} Name" for n in range(2, MAX_MEMBERS + 1)
+] + [
+    f"Member {n} Email" for n in range(2, MAX_MEMBERS + 1)
 ] + [
     f"Member {n} Contact" for n in range(2, MAX_MEMBERS + 1)
 ] + [
@@ -104,7 +109,8 @@ def _first_nonempty(values):
     return ""
 
 
-def _clean_record(meta, members_by_slot, food_candidates, food_by_col=None):
+def _clean_record(meta, members_by_slot, food_candidates, food_by_col=None,
+                   member_emails=None, member_contacts=None):
     # Per-member food preferences (leader, member 2, member 3)
     foods = _member_foods(meta.get("Team Size"), food_by_col)
 
@@ -116,10 +122,18 @@ def _clean_record(meta, members_by_slot, food_candidates, food_by_col=None):
         return None
 
     row = [meta.get(k, "") for k in OUTPUT_ORDER_BEFORE_MEMBERS]
+    # Member names
     for n in range(2, MAX_MEMBERS + 1):
         row.append(_first_nonempty(members_by_slot[n]))
+    # Member emails
+    member_emails = member_emails or {}
     for n in range(2, MAX_MEMBERS + 1):
-        row.append("")  # contacts not mapped yet
+        row.append(member_emails.get(n, ""))
+    # Member contacts
+    member_contacts = member_contacts or {}
+    for n in range(2, MAX_MEMBERS + 1):
+        row.append(member_contacts.get(n, ""))
+    # Member foods (leader, m2, m3)
     if foods and len(foods) >= 1:
         row.append(foods[0])  # leader
     else:
@@ -162,6 +176,8 @@ def from_matrix(headers, rows):
     for row in rows:
         meta = {}
         members_by_slot = {n: [] for n in range(2, MAX_MEMBERS + 1)}
+        member_emails = {}
+        member_contacts = {}
         food_candidates = []
         food_by_col = {}
         solo_name = ""
@@ -199,17 +215,24 @@ def from_matrix(headers, rows):
                 continue
 
             if "member" in low:
-                m = re.search(r"member\s*([2-4])", h, re.IGNORECASE)
+                m = re.search(r"member\s*(2|3)", h, re.IGNORECASE)
                 if m:
                     slot = int(m.group(1))
-                    if slot in members_by_slot and fmt:
+                    if "email" in low:
+                        if slot in (2, 3) and fmt and slot not in member_emails:
+                            member_emails[slot] = fmt
+                    elif "contact" in low:
+                        if slot in (2, 3) and fmt and slot not in member_contacts:
+                            member_contacts[slot] = fmt
+                    elif slot in members_by_slot and fmt:
                         members_by_slot[slot].append(fmt)
 
         if solo_name and str(meta.get("Team Size", "")).strip() == "1" \
                 and not meta.get("Leader Name"):
             meta["Leader Name"] = solo_name
 
-        clean = _clean_record(meta, members_by_slot, food_candidates, food_by_col)
+        clean = _clean_record(meta, members_by_slot, food_candidates, food_by_col,
+                              member_emails, member_contacts)
         if clean is not None:
             out.append(clean)
 
@@ -224,6 +247,8 @@ def from_headers(values_with_headers):
     for record in values_with_headers:
         meta = {}
         members_by_slot = {n: [] for n in range(2, MAX_MEMBERS + 1)}
+        member_emails = {}
+        member_contacts = {}
         food_candidates = []
         food_by_col = {}
         solo_name = ""
@@ -261,17 +286,24 @@ def from_headers(values_with_headers):
                 continue
 
             if "member" in low:
-                m = re.search(r"member\s*([2-4])", h, re.IGNORECASE)
+                m = re.search(r"member\s*(2|3)", h, re.IGNORECASE)
                 if m:
                     slot = int(m.group(1))
-                    if slot in members_by_slot and fmt:
+                    if "email" in low:
+                        if slot in (2, 3) and fmt and slot not in member_emails:
+                            member_emails[slot] = fmt
+                    elif "contact" in low:
+                        if slot in (2, 3) and fmt and slot not in member_contacts:
+                            member_contacts[slot] = fmt
+                    elif slot in members_by_slot and fmt:
                         members_by_slot[slot].append(fmt)
 
         if solo_name and str(meta.get("Team Size", "")).strip() == "1" \
                 and not meta.get("Leader Name"):
             meta["Leader Name"] = solo_name
 
-        clean = _clean_record(meta, members_by_slot, food_candidates, food_by_col)
+        clean = _clean_record(meta, members_by_slot, food_candidates, food_by_col,
+                              member_emails, member_contacts)
         if clean is not None:
             out.append(clean)
 

@@ -95,12 +95,19 @@ function onFormSubmit(e) {
 }
 
 function sendConfirmationEmail(row) {
-  var toEmail = row.email;
-  if (!toEmail) {
+  // Collect all emails: leader + member 2 + member 3
+  var allEmails = [];
+  if (row.email) allEmails.push(row.email);
+  if (row.leader_email && row.leader_email !== row.email) allEmails.push(row.leader_email);
+  if (row.member_2_email) allEmails.push(row.member_2_email);
+  if (row.member_3_email) allEmails.push(row.member_3_email);
+
+  if (allEmails.length === 0) {
     Logger.log('No email found in row; skipping email.');
     return;
   }
 
+  var toEmail = allEmails.join(',');
   var teamId = row.team_id || 'N/A';
   var teamName = row.team_name || 'N/A';
   var college = row.college || 'N/A';
@@ -114,12 +121,12 @@ function sendConfirmationEmail(row) {
 
   // Gather team members (leader first, then the rest).
   var members = [];
-  members.push({ role: 'TEAM LEADER', name: leaderName, contact: row.leader_contact || '', food: row.leader_food || row.food_preference || foodPref });
+  members.push({ role: 'TEAM LEADER', name: leaderName, email: row.leader_email || row.email || '', contact: row.leader_contact || '', food: row.leader_food || row.food_preference || foodPref });
   if (row.members && row.members.length) {
     for (var mi = 0; mi < row.members.length; mi++) {
       var m = row.members[mi];
       if (m && m.name) {
-        members.push({ role: 'MEMBER ' + (mi + 2), name: m.name, contact: m.contact || '', food: m.food || foodPref });
+        members.push({ role: 'MEMBER ' + (mi + 2), name: m.name, email: m.email || '', contact: m.contact || '', food: m.food || foodPref });
       }
     }
   }
@@ -129,6 +136,8 @@ function sendConfirmationEmail(row) {
     ['TEAM ID', teamId],
     ['TEAM NAME', teamName],
     ['COLLEGE', college],
+    ['DEPARTMENT', row.department || 'N/A'],
+    ['YEAR', row.year || 'N/A'],
     ['TEAM SIZE', teamSize + ' members'],
     ['TECH EVENT', techEvent],
     ['NON-TECH EVENT', nonTechEvent]
@@ -149,13 +158,18 @@ function sendConfirmationEmail(row) {
     for (var k = 0; k < members.length; k++) {
       var mbg = (k % 2 === 0) ? '#ffffff' : '#f6f5ff';
       var contactHtml = members[k].contact ? members[k].contact : '';
+      var emailHtml = members[k].email ? members[k].email : '';
+      var detailParts = [];
+      if (contactHtml) detailParts.push(contactHtml);
+      if (emailHtml) detailParts.push(emailHtml);
+      var detailStr = detailParts.length ? ' &nbsp;&middot;&nbsp; ' + detailParts.join(' &nbsp;&middot;&nbsp; ') : '';
       var memberFood = members[k].food || foodPref;
       var memberFoodColor = (memberFood.toLowerCase().indexOf('non') !== -1) ? '#ef4444' : '#22c55e';
       var foodIcon = '<span style="display:inline-block;width:14px;height:14px;border:2px solid ' + memberFoodColor + ';border-radius:3px;vertical-align:middle;text-align:center;line-height:10px;font-size:0;"><span style="display:inline-block;width:6px;height:6px;background:' + memberFoodColor + ';border-radius:50%;vertical-align:middle;"></span></span>';
       membersHtml += ''
         + '<tr style="background:' + mbg + ';">'
         + '<td style="padding:11px 16px;color:#7c3aed;font-size:12px;font-weight:700;letter-spacing:1px;width:38%;border-bottom:1px solid #eef0f6;text-transform:uppercase;">' + members[k].role + '</td>'
-        + '<td style="padding:11px 16px;color:#1e293b;font-size:14px;font-weight:600;border-bottom:1px solid #eef0f6;"><table cellpadding="0" cellspacing="0" border="0" style="width:100%;"><tr><td style="padding:0;color:#1e293b;font-size:14px;font-weight:600;">' + members[k].name + (contactHtml ? ' &nbsp;&middot;&nbsp; ' + contactHtml : '') + '</td><td style="padding:0;text-align:right;white-space:nowrap;">' + foodIcon + '</td></tr></table></td>'
+        + '<td style="padding:11px 16px;color:#1e293b;font-size:14px;font-weight:600;border-bottom:1px solid #eef0f6;"><table cellpadding="0" cellspacing="0" border="0" style="width:100%;"><tr><td style="padding:0;color:#1e293b;font-size:14px;font-weight:600;">' + members[k].name + detailStr + '</td><td style="padding:0;text-align:right;white-space:nowrap;">' + foodIcon + '</td></tr></table></td>'
         + '</tr>';
     }
   }
@@ -171,7 +185,7 @@ function sendConfirmationEmail(row) {
     + '</div>'
     // Body card
     + '<div style="background:#ffffff;border-radius:16px;margin-top:-8px;padding:26px 24px;box-shadow:0 8px 24px rgba(79,70,229,0.10);">'
-    + '<p style="margin:0 0 6px 0;color:#111827;font-size:19px;font-weight:700;">Hi ' + leaderName + ',</p>'
+    + '<p style="margin:0 0 6px 0;color:#111827;font-size:19px;font-weight:700;">Hi Team ' + teamName + ',</p>'
     + '<p style="margin:0;color:#6b7280;font-size:14px;line-height:1.7;">Your team registration for <b style="color:#4f46e5;">ZenoFest 2026</b> is officially confirmed. Here is your registration summary:</p>'
     + '<table style="width:100%;border-collapse:collapse;margin:20px 0 6px;">' + rowsHtml + '</table>'
     + (membersHtml ? '<p style="margin:18px 0 6px;color:#4c1d95;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Team Members</p><table style="width:100%;border-collapse:collapse;">' + membersHtml + '</table>' : '')
@@ -191,6 +205,8 @@ function sendConfirmationEmail(row) {
       teamId: teamId,
       teamName: teamName,
       college: college,
+      department: row.department || 'N/A',
+      year: row.year || 'N/A',
       leaderName: leaderName,
       teamSize: teamSize,
       techEvent: techEvent,
@@ -265,6 +281,8 @@ function buildRegistrationPdf(details) {
     ['Team ID', details.teamId],
     ['Team Name', details.teamName],
     ['College', details.college],
+    ['Department', details.department || 'N/A'],
+    ['Year', details.year || 'N/A'],
     ['Team Size', details.teamSize + ' members'],
     ['Technical Event', details.techEvent],
     ['Non-Technical Event', details.nonTechEvent]
@@ -318,7 +336,8 @@ function buildRegistrationPdf(details) {
       var innerTbl = mC3.appendTable();
       innerTbl.setBorderWidth(0);
       var innerR = innerTbl.appendTableRow();
-      var cell1 = innerR.appendTableCell(cm.contact || '');
+      var contactEmail = (cm.contact || '') + (cm.email ? ' | ' + cm.email : '');
+      var cell1 = innerR.appendTableCell(contactEmail);
       var cell2 = innerR.appendTableCell('');
       cell1.setPaddingTop(0).setPaddingBottom(0);
       cell2.setPaddingTop(0).setPaddingBottom(0).setPaddingLeft(0).setPaddingRight(0);
