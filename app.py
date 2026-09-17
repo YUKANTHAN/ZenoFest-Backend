@@ -291,6 +291,37 @@ def create_app(client=None):
     def health():
         return jsonify({"ok": True}), 200
 
+    @app.get("/rebuild")
+    def rebuild():
+        """Force rebuild the organized sheet: rewrite headers + re-append all rows."""
+        try:
+            client = app.config["CLIENT"]
+            raw_ws = open_raw_sheet(client)
+            organized_ws = get_or_create_organized(client)
+
+            raw_matrix = raw_ws.get_all_values()
+            headers = raw_matrix[0]
+            data_rows = raw_matrix[1:]
+            clean_rows = rl.from_matrix(headers, data_rows)
+
+            # Clear the entire sheet, rewrite header, re-append all data.
+            existing = organized_ws.get_all_values()
+            if len(existing) > 1:
+                organized_ws.delete_rows(2, len(existing))
+            organized_ws.update(range_name="A1", values=[rl.OUTPUT_HEADERS])
+
+            if clean_rows:
+                end_col = max(2, len(rl.OUTPUT_HEADERS))
+                end_row = 1 + len(clean_rows)
+                organized_ws.update(
+                    range_name=f"A2:{colname(end_col)}{end_row}",
+                    values=clean_rows,
+                    value_input_option="USER_ENTERED",
+                )
+            return jsonify({"ok": True, "rebuilt": len(clean_rows)}), 200
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
     @app.get("/team-id-sample")
     def team_id_sample():
         """Small dev helper: preview the team id format for each event."""
