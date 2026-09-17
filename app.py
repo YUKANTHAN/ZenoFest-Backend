@@ -211,20 +211,29 @@ def sync(client=None, raw_ws=None, organized_ws=None):
     # append further right and the columns drift (rows landed at col 17, 33, 49,
     # ... on 9/12 because of this).
     first = organized_ws.get_all_values()
+    header_changed = False
     if not first or all(not c for c in first[0]):
         organized_ws.update(range_name="A1", values=[rl.OUTPUT_HEADERS])
         start_row = 2
     else:
-        # Always overwrite header row to match current schema.
-        organized_ws.update(range_name="A1", values=[rl.OUTPUT_HEADERS])
+        # Detect if the schema changed (e.g. new columns added).
+        if list(first[0]) != list(rl.OUTPUT_HEADERS):
+            header_changed = True
+            print("Schema changed — rebuilding organized sheet from scratch.")
+            # Clear everything except the header, then re-append all data.
+            total_rows = len(first)
+            if total_rows > 1:
+                organized_ws.delete_rows(2, total_rows)
+            organized_ws.update(range_name="A1", values=[rl.OUTPUT_HEADERS])
+            to_append = clean_rows  # re-append ALL rows, not just new ones
         # Scan for the first empty row (all cells blank) and append there.
         start_row = None
-        for i, row in enumerate(first[1:], start=2):
+        for i, row in enumerate(first[1:] if not header_changed else [], start=2):
             if all(not cell for cell in row):
                 start_row = i
                 break
         if start_row is None:
-            start_row = len(first) + 1
+            start_row = (2 if header_changed else len(first) + 1)
     end_col = max(2, len(rl.OUTPUT_HEADERS))
     end_row = start_row + len(to_append) - 1
     organized_ws.update(
